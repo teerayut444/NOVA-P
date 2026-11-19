@@ -93,7 +93,7 @@ echo [Tip] If other PCs cannot connect, allow port 8501 in Windows Firewall (run
 echo       netsh advfirewall firewall add rule name="NOVA Dashboard 8501" dir=in action=allow protocol=TCP localport=8501 profile=domain,private
 echo.
 
-"%PYTHON_EXE%" -m streamlit run app.py --server.maxUploadSize=500 --browser.gatherUsageStats=false
+"%PYTHON_EXE%" -m streamlit run app.py --server.headless=false --server.maxUploadSize=500 --browser.gatherUsageStats=false
 
 if %errorlevel% neq 0 (
     echo.
@@ -102,7 +102,7 @@ if %errorlevel% neq 0 (
     "%PYTHON_EXE%" -m pip install -r requirements.txt
     echo.
     echo [Launch] Retrying Streamlit Dashboard...
-    "%PYTHON_EXE%" -m streamlit run app.py --server.maxUploadSize=500 --browser.gatherUsageStats=false
+    "%PYTHON_EXE%" -m streamlit run app.py --server.headless=false --server.maxUploadSize=500 --browser.gatherUsageStats=false
 )
 
 echo.

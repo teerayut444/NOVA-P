@@ -1,8 +1,9 @@
 [server]
-# LAN deployment: listen on all network interfaces so other PCs can use the Network URL
+# LAN / Cloud deployment: listen on all network interfaces
 address = "0.0.0.0"
 port = 8501
-headless = false
+headless = true
+showEmailPrompt = false
 # Don't auto-reload all connected users when a source file is touched on the host
 runOnSave = false
 fileWatcherType = "none"
