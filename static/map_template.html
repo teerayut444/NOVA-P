@@ -3783,11 +3783,6 @@
     <script src="/app/static/d3.js"></script>
     <script src="/app/static/map_cache_builder.js?v=CACHE_BUILDER_VER_PLACEHOLDER"></script>
     <script src="/app/static/deck.gl.js"></script>
-    <script>
-      if (typeof deck === 'undefined') {
-        document.write('<script src="https://unpkg.com/deck.gl@9.0.16/dist.min.js"><\\/script>');
-      }
-    </script>
 
     <script>
       const loader = document.getElementById('loader');
@@ -4590,7 +4585,7 @@
               const params = new URLSearchParams();
               params.set('suit_no', suitNo);
               if (suitYear) params.set('suit_year', suitYear);
-              link = `/app/static/led_legal_bridge.html?${params.toString()}`;
+              link = `${getAppStaticBases()[0]}led_legal_bridge.html?${params.toString()}`;
             }
           }
         }
@@ -6375,6 +6370,41 @@
         syncComboboxInputs();
       }
 
+      function getAppStaticBases() {
+        const bases = [];
+        const addBase = (b) => {
+          if (!b) return;
+          const norm = b.endsWith('/') ? b : (b + '/');
+          if (!bases.includes(norm)) bases.push(norm);
+        };
+        const addFromPathname = (pn) => {
+          if (!pn || pn === 'blank' || pn === 'srcdoc') return;
+          if (/^\/~\/\+(?:\/|$)/.test(pn)) {
+            addBase('/~/+/app/static/');
+          } else {
+            const dir = pn.endsWith('/') ? pn : pn.replace(/\/[^/]*$/, '/');
+            addBase(dir + 'app/static/');
+          }
+        };
+        try {
+          if (window.parent && window.parent.location) {
+            addFromPathname(window.parent.location.pathname);
+          }
+        } catch (_e) {}
+        try {
+          if (window.location) {
+            addFromPathname(window.location.pathname);
+          }
+        } catch (_e) {}
+        try {
+          if (document.referrer) {
+            addFromPathname(new URL(document.referrer).pathname);
+          }
+        } catch (_e) {}
+        addBase('/app/static/');
+        return bases;
+      }
+
       function _loadScriptAsync(src) {
         return new Promise((resolve) => {
           const s = document.createElement('script');
@@ -6384,6 +6414,20 @@
           s.onerror = () => resolve(false);
           document.head.appendChild(s);
         });
+      }
+
+      async function _loadStaticAssetScript(relPath, fallbackCdnUrl, verifyFn) {
+        const cleanRel = String(relPath || '').replace(/^\/+/, '');
+        const bases = getAppStaticBases();
+        for (const base of bases) {
+          const ok = await _loadScriptAsync(base + cleanRel);
+          if (ok && (!verifyFn || verifyFn())) return true;
+        }
+        if (fallbackCdnUrl) {
+          const ok = await _loadScriptAsync(fallbackCdnUrl);
+          if (ok && (!verifyFn || verifyFn())) return true;
+        }
+        return false;
       }
 
       function loadBoundaryScriptsInBackground() {
@@ -6402,14 +6446,15 @@
         // 1. Load client-side province boundaries non-blockingly
         (async function _loadProvincesAsync() {
           if (!window.ALL_PROVINCES_BOUNDARIES || Object.keys(window.ALL_PROVINCES_BOUNDARIES).length === 0) {
-            await _loadScriptAsync('/app/static/provinces_geojson.js?v=20261001');
-          }
-          if (!window.ALL_PROVINCES_BOUNDARIES || Object.keys(window.ALL_PROVINCES_BOUNDARIES).length === 0) {
-            await _loadScriptAsync('provinces_geojson.js?v=20261001');
+            await _loadStaticAssetScript(
+              'provinces_geojson.js?v=20261001',
+              null,
+              () => !!(window.ALL_PROVINCES_BOUNDARIES && Object.keys(window.ALL_PROVINCES_BOUNDARIES).length > 0)
+            );
           }
           if (!window.ALL_PROVINCES_BOUNDARIES || Object.keys(window.ALL_PROVINCES_BOUNDARIES).length === 0) {
             const _bUrls = [
-              '/app/static/provinces_geojson.json',
+              ...getAppStaticBases().map(b => b + 'provinces_geojson.json'),
               '/static/provinces_geojson.json',
               'provinces_geojson.json',
               './provinces_geojson.json',
@@ -6438,14 +6483,15 @@
         // 2. Load client-side subdistrict boundaries non-blockingly
         (async function _loadSubdistrictsAsync() {
           if (!window.ALL_SUBDISTRICTS_BOUNDARIES || Object.keys(window.ALL_SUBDISTRICTS_BOUNDARIES).length === 0) {
-            await _loadScriptAsync('/app/static/subdistricts_geojson.js?v=20261001');
-          }
-          if (!window.ALL_SUBDISTRICTS_BOUNDARIES || Object.keys(window.ALL_SUBDISTRICTS_BOUNDARIES).length === 0) {
-            await _loadScriptAsync('subdistricts_geojson.js?v=20261001');
+            await _loadStaticAssetScript(
+              'subdistricts_geojson.js?v=20261001',
+              null,
+              () => !!(window.ALL_SUBDISTRICTS_BOUNDARIES && Object.keys(window.ALL_SUBDISTRICTS_BOUNDARIES).length > 0)
+            );
           }
           if (!window.ALL_SUBDISTRICTS_BOUNDARIES || Object.keys(window.ALL_SUBDISTRICTS_BOUNDARIES).length === 0) {
             const _subUrls = [
-              '/app/static/subdistricts_geojson.json?v=20261001',
+              ...getAppStaticBases().map(b => b + 'subdistricts_geojson.json?v=20261001'),
               '/static/subdistricts_geojson.json?v=20261001',
               'subdistricts_geojson.json?v=20261001',
               './subdistricts_geojson.json?v=20261001',
@@ -11392,8 +11438,29 @@
 
       async function initMap() {
         try {
+          if (typeof d3 === 'undefined') {
+            await _loadStaticAssetScript(
+              'd3.js',
+              'https://unpkg.com/d3@7/dist/d3.min.js',
+              () => typeof window.d3 !== 'undefined'
+            );
+          }
           if (!window.NovaMapCache) {
-            await _loadScriptAsync('/app/static/map_cache_builder.js?v=' + encodeURIComponent(cacheBuilderVerToken || '1'));
+            await _loadStaticAssetScript(
+              'map_cache_builder.js?v=' + encodeURIComponent(cacheBuilderVerToken || '1'),
+              null,
+              () => !!window.NovaMapCache
+            );
+          }
+          if (typeof deck === 'undefined') {
+            await _loadStaticAssetScript(
+              'deck.gl.js',
+              'https://unpkg.com/deck.gl@9.0.16/dist.min.js',
+              () => typeof window.deck !== 'undefined'
+            );
+          }
+          if (typeof deck === 'undefined') {
+            throw new Error('ไม่สามารถโหลดไลบรารีแผนที่ (deck.gl) ได้');
           }
 
           let _lut = { co: [], ty: [], pv: [], st: [], rg: [], dt: [], subdt: [], prj: [], plaintiff: [], co_rgb: [] };
@@ -11419,10 +11486,14 @@
             } else {
               loaderText.innerText = "กำลังโหลดข้อมูลพิกัดแผนที่...";
               if (!window.__NOVA_RAW_MAP_PAYLOAD__ || !window.__NOVA_RAW_MAP_PAYLOAD__.csv) {
-                await _loadScriptAsync('/app/static/map_payload_cache.js?v=' + encodeURIComponent(dataMtimeToken || '1'));
+                await _loadStaticAssetScript(
+                  'map_payload_cache.js?v=' + encodeURIComponent(dataMtimeToken || '1'),
+                  null,
+                  () => !!(window.__NOVA_RAW_MAP_PAYLOAD__ && window.__NOVA_RAW_MAP_PAYLOAD__.csv)
+                );
               }
               if (!window.__NOVA_RAW_MAP_PAYLOAD__ || !window.__NOVA_RAW_MAP_PAYLOAD__.csv) {
-                throw new Error('ไม่สามารถโหลดไฟล์แคชข้อมูลแผนที่ (/app/static/map_payload_cache.js)');
+                throw new Error('ไม่สามารถโหลดไฟล์แคชข้อมูลแผนที่ (map_payload_cache.js)');
               }
               cacheObj = await window.NovaMapCache.buildAndStoreParentCache(
                 dataMtimeToken,

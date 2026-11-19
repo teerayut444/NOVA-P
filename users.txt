@@ -1,4 +1,4 @@
 # NOVA NPA Dashboard - Users (ignored by Git)
 # Format: username:password or username:password:display_name
 admin:pbkdf2_sha256$260000$ccc60141716e423d4c29f6f3224755d5$58cfdc76fc48eef653980e2cf8a3016f6224890a2d6dedef14d1366f91707b08:Administrator
-user:pbkdf2_sha256$260000$adfe6fbcd42a6797b1d7b0c9ef091b0f$7596e13e3283b7f52d28814ee2331d16a242a0882ec53730743ada8b53390412:User
+user1:pbkdf2_sha256$260000$adfe6fbcd42a6797b1d7b0c9ef091b0f$7596e13e3283b7f52d28814ee2331d16a242a0882ec53730743ada8b53390412:User

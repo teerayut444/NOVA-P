@@ -105,6 +105,41 @@ def _render_browser_map_prewarmer(data_mtime, builder_ver):
     }}
   }}
 
+  function getAppStaticBases() {{
+    const bases = [];
+    const addBase = (b) => {{
+      if (!b) return;
+      const norm = b.endsWith('/') ? b : (b + '/');
+      if (!bases.includes(norm)) bases.push(norm);
+    }};
+    const addFromPathname = (pn) => {{
+      if (!pn || pn === 'blank' || pn === 'srcdoc') return;
+      if (/^\\/~\\/\\+(?:\\/|$)/.test(pn)) {{
+        addBase('/~/+/app/static/');
+      }} else {{
+        const dir = pn.endsWith('/') ? pn : pn.replace(/\\/[^/]*$/, '/');
+        addBase(dir + 'app/static/');
+      }}
+    }};
+    try {{
+      if (window.parent && window.parent.location) {{
+        addFromPathname(window.parent.location.pathname);
+      }}
+    }} catch (_e) {{}}
+    try {{
+      if (window.location) {{
+        addFromPathname(window.location.pathname);
+      }}
+    }} catch (_e) {{}}
+    try {{
+      if (document.referrer) {{
+        addFromPathname(new URL(document.referrer).pathname);
+      }}
+    }} catch (_e) {{}}
+    addBase('/app/static/');
+    return bases;
+  }}
+
   function loadScript(src) {{
     return new Promise((resolve) => {{
       const s = document.createElement('script');
@@ -114,6 +149,20 @@ def _render_browser_map_prewarmer(data_mtime, builder_ver):
       s.onerror = () => resolve(false);
       document.head.appendChild(s);
     }});
+  }}
+
+  async function loadStaticScript(relPath, fallbackCdnUrl, verifyFn) {{
+    const cleanRel = String(relPath || '').replace(/^\\/+/, '');
+    const bases = getAppStaticBases();
+    for (const base of bases) {{
+      const ok = await loadScript(base + cleanRel);
+      if (ok && (!verifyFn || verifyFn())) return true;
+    }}
+    if (fallbackCdnUrl) {{
+      const ok = await loadScript(fallbackCdnUrl);
+      if (ok && (!verifyFn || verifyFn())) return true;
+    }}
+    return false;
   }}
 
   function hasValidParentCacheFast() {{
@@ -140,14 +189,14 @@ def _render_browser_map_prewarmer(data_mtime, builder_ver):
       }}
 
       const boundaryPromise = Promise.all([
-        loadScript('/app/static/provinces_geojson.js?v=20261001'),
-        loadScript('/app/static/subdistricts_geojson.js?v=20261001')
+        loadStaticScript('provinces_geojson.js?v=20261001', null, () => !!window.ALL_PROVINCES_BOUNDARIES),
+        loadStaticScript('subdistricts_geojson.js?v=20261001', null, () => !!window.ALL_SUBDISTRICTS_BOUNDARIES)
       ]).catch(() => null);
 
       await Promise.all([
-        loadScript('/app/static/d3.js'),
-        loadScript('/app/static/map_cache_builder.js?v=' + encodeURIComponent(BUILDER_VER)),
-        loadScript('/app/static/map_payload_cache.js?v=' + encodeURIComponent(MTIME_TOKEN))
+        loadStaticScript('d3.js', 'https://unpkg.com/d3@7/dist/d3.min.js', () => typeof window.d3 !== 'undefined'),
+        loadStaticScript('map_cache_builder.js?v=' + encodeURIComponent(BUILDER_VER), null, () => !!window.NovaMapCache),
+        loadStaticScript('map_payload_cache.js?v=' + encodeURIComponent(MTIME_TOKEN), null, () => !!(window.__NOVA_RAW_MAP_PAYLOAD__ && window.__NOVA_RAW_MAP_PAYLOAD__.csv))
       ]);
 
       if (window.NovaMapCache && window.__NOVA_RAW_MAP_PAYLOAD__ && window.__NOVA_RAW_MAP_PAYLOAD__.csv) {{
@@ -377,21 +426,21 @@ def render_welcome_screen():
         cur_mtime_token = get_data_mtime_token(cur_mtime)
         builder_ver = get_cache_builder_version()
         payload_preload_tag = (
-            f'<link rel="preload" href="/app/static/map_payload_cache.js?v={cur_mtime_token}" as="script">'
+            f'<link rel="preload" href="app/static/map_payload_cache.js?v={cur_mtime_token}" as="script">'
             if os.path.exists(STATIC_MAP_PAYLOAD_PATH)
             else ""
         )
         preload_links_html = f"""
 <!-- Preload heavy map & chart JS libraries into browser HTTP cache during Welcome Screen -->
-<link rel="preload" href="/app/static/d3.js" as="script">
-<link rel="preload" href="/app/static/map_cache_builder.js?v={builder_ver}" as="script">
+<link rel="preload" href="app/static/d3.js" as="script">
+<link rel="preload" href="app/static/map_cache_builder.js?v={builder_ver}" as="script">
 {payload_preload_tag}
-<link rel="preload" href="/app/static/deck.gl.js" as="script">
-<link rel="preload" href="/app/static/provinces_geojson.js?v=20261001" as="script">
-<link rel="preload" href="/app/static/subdistricts_geojson.js?v=20261001" as="script">
-<link rel="preload" href="/app/static/vendor/leaflet/leaflet.css" as="style">
-<link rel="preload" href="/app/static/vendor/leaflet/leaflet.js" as="script">
-<link rel="preload" href="/app/static/leaflet-heat.js" as="script">
+<link rel="preload" href="app/static/deck.gl.js" as="script">
+<link rel="preload" href="app/static/provinces_geojson.js?v=20261001" as="script">
+<link rel="preload" href="app/static/subdistricts_geojson.js?v=20261001" as="script">
+<link rel="preload" href="app/static/vendor/leaflet/leaflet.css" as="style">
+<link rel="preload" href="app/static/vendor/leaflet/leaflet.js" as="script">
+<link rel="preload" href="app/static/leaflet-heat.js" as="script">
 """
 
     stage_w, stage_h, img_size, title_size, title_margin = (
