@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>นำทางไปยังข้อมูลการขายทอดตลาด กรมบังคับคดี (LED Legal)...</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #090d16 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f8fafc;
+            padding: 20px;
+        }
+        .bridge-card {
+            background: rgba(30, 41, 59, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 36px 32px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(100, 116, 139, 0.2);
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .logo-container {
+            width: 68px;
+            height: 68px;
+            background: linear-gradient(135deg, #334155, #1e293b);
+            border: 2px solid #475569;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.5);
+            font-size: 28px;
+        }
+        h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .sub-tag {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            letter-spacing: 0.3px;
+        }
+        .case-badge {
+            display: inline-block;
+            background: rgba(71, 85, 105, 0.25);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            color: #f1f5f9;
+            font-weight: 700;
+            font-size: 1.15rem;
+            padding: 6px 18px;
+            border-radius: 10px;
+            margin: 8px 0 16px;
+            letter-spacing: 0.5px;
+        }
+        .status-text {
+            color: #94a3b8;
+            font-size: 0.92rem;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .spinner {
+            width: 42px;
+            height: 42px;
+            border: 3.5px solid rgba(148, 163, 184, 0.2);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .btn-manual {
+            display: inline-block;
+            background: linear-gradient(135deg, #475569, #334155);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.92rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.35);
+        }
+        .btn-manual:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #64748b, #475569);
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="bridge-card">
+        <div class="logo-container">⚖️</div>
+        <h2>รายงานผลการขายทอดตลาด (LED Legal)</h2>
+        <div class="sub-tag">ระบบค้นหาข้อมูลการขายทอดตลาด กรมบังคับคดี</div>
+        <div class="case-badge" id="caseDisplay">กำลังตรวจสอบคดี...</div>
+        <p class="status-text" id="statusMsg">กำลังส่งคำสั่งค้นหาไปยังรายงานผลการขายทอดตลาด...</p>
+        <div class="spinner" id="spinner"></div>
+
+        <form id="ledForm" action="https://asset.led.go.th/report/reports.asp" method="POST" style="display: none;">
+            <input type="hidden" name="ALAW_SUIT_NO" id="suitNo">
+            <input type="hidden" name="ALAW_SUIT_YEAR" id="suitYear">
+            <input type="hidden" name="Action" value="ค้นหา">
+        </form>
+
+        <button class="btn-manual" id="manualBtn" style="display: none;" onclick="submitForm()">คลิกที่นี่หากหน้าเว็บไม่เปลี่ยนอัตโนมัติ</button>
+    </div>
+
+    <script>
+        function getParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let suitNo = urlParams.get('suit_no') || urlParams.get('ALAW_SUIT_NO') || '';
+            let suitYear = urlParams.get('suit_year') || urlParams.get('ALAW_SUIT_YEAR') || '';
+            let code = urlParams.get('code') || '';
+
+            // ตัด _จังหวัด หรือข้อความหลังเครื่องหมาย _ ตัวสุดท้ายออก
+            const stripProvince = (val) => (val || '').replace(/_.*$/, '').trim();
+
+            suitNo = stripProvince(suitNo);
+            suitYear = stripProvince(suitYear);
+            code = stripProvince(code);
+
+            if ((!suitNo || !suitYear) && code) {
+                if (code.includes('/')) {
+                    const parts = code.split('/');
+                    suitNo = stripProvince(parts[0]);
+                    suitYear = stripProvince(parts[1]);
+                } else {
+                    suitNo = code.trim();
+                }
+            }
+
+            if (suitNo.includes('/') && !suitYear) {
+                const parts = suitNo.split('/');
+                suitNo = parts[0].trim();
+                suitYear = parts[1].trim();
+            }
+
+            return { suitNo, suitYear };
+        }
+
+        const { suitNo, suitYear } = getParams();
+
+        if (suitNo) {
+            const displayLabel = suitYear ? `${suitNo} / ${suitYear}` : suitNo;
+            document.getElementById('caseDisplay').innerText = `คดีหมายเลขแดง: ${displayLabel}`;
+            document.getElementById('suitNo').value = suitNo;
+            document.getElementById('suitYear').value = suitYear;
+
+            function submitForm() {
+                document.getElementById('ledForm').submit();
+            }
+
+            // Submit immediately
+            setTimeout(submitForm, 250);
+
+            // Show manual button fallback after 2.5s if not navigated
+            setTimeout(() => {
+                document.getElementById('manualBtn').style.display = 'inline-block';
+            }, 2500);
+        } else {
+            document.getElementById('caseDisplay').innerText = 'ไม่พบข้อมูลหมายเลขคดี';
+            document.getElementById('statusMsg').innerText = 'กรุณาเปิดลิงก์ผ่านระบบแดชบอร์ด';
+            document.getElementById('spinner').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

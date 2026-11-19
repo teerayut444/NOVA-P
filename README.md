@@ -1,2 +1,0 @@
-# NOVA-P
-Web Dash

@@ -1,0 +1,22 @@
+[server]
+# LAN deployment: listen on all network interfaces so other PCs can use the Network URL
+address = "0.0.0.0"
+port = 8501
+headless = false
+# Don't auto-reload all connected users when a source file is touched on the host
+runOnSave = false
+fileWatcherType = "none"
+maxUploadSize = 500
+maxMessageSize = 500
+enableStaticServing = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor = "#047857"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f4f8f6"
+textColor = "#0f172a"
+
