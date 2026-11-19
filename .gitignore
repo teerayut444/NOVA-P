@@ -1,0 +1,239 @@
+# ==============================================================================
+# Python Bytecode, Caches & Environments
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.cpython-*
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+ENV/
+.env
+*.env
+.env.*
+
+# ==============================================================================
+# Streamlit Secrets & Local Config
+# ==============================================================================
+.streamlit/secrets.toml
+users.txt
+
+# ==============================================================================
+# Logs, Temp & Swap Files
+# ==============================================================================
+*.log
+logs/
+*.tmp
+*.bak
+*.swp
+*.clean
+*~
+*.1s
+
+# ==============================================================================
+# PyInstaller, Executables, Archives & Build Artifacts
+# ==============================================================================
+build/
+dist/
+packaging/build/
+packaging/dist/
+*.exe
+*.dll
+*.so
+*.dylib
+*.pyd
+*.spec
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# ==============================================================================
+# Deploy Output & Build Scripts
+# ==============================================================================
+All_Asset_Dashboard_Deploy/
+build_*.bat
+*build*.ps1
+*build*.py
+
+# ==============================================================================
+# Web Scrapers, Enrichment & External Tools (Non-Dashboard)
+# ==============================================================================
+Py Scraper/
+Monthly all new/
+QA_Checker/
+CSV_Output/
+py/
+tools/
+clean_sam_project.py
+*scraper*
+*enrich*
+*scrape*
+scraping*.log
+.*_state_*.json
+**/.waf_profile/
+.waf_profile/
+*profile*/
+*_profile/
+
+# ==============================================================================
+# Scratch / Test Scripts & Outputs
+# ==============================================================================
+scratch/
+scratch*
+
+# ==============================================================================
+# Raw Data Files, Historical Snapshots & Large Assets
+# ==============================================================================
+# Spreadsheets & PDFs
+*.csv
+*.xlsx
+*.xls
+*.pdf
+
+# Parquet — ignore snapshot / historical backups (>35 MB each)
+*.parquet
+Parquet/
+data/*.parquet
+
+# GeoJSON — general boundary files
+*.geojson
+
+# SQLite databases (user logs, caches) & MBTiles
+*.db
+*.mbtiles
+offline_landsmaps/qgis_export/*.mbtiles
+
+# LandsMaps Offline Raw Tiles & Heavy Rasters (>100MB risk)
+offline_landsmaps/tiles/
+offline_landsmaps/data/offline_rasters_bundle.js
+
+# ==============================================================================
+# ==============================================================================
+# Images, Photos, Tiles & Captchas (Ignore by default)
+# ==============================================================================
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.bmp
+*.ico
+*.tiff
+
+# ==============================================================================
+# Whitelist — Primary Dashboard Dataset & Reference Assets
+# ==============================================================================
+# Whitelist Official UI Logos & Architecture Diagrams
+!logo/
+!logo/**
+!static/docs/
+!static/docs/**
+
+!all_assets.parquet
+!data/districts.geojson
+!data/subdistricts.geojson
+!references/thailand_provinces_districts_subdistricts.csv
+!references/thailand_provinces_districts_subdistricts.json
+!references/thailand_provinces_districts_subdistricts.xlsx
+!references/dummy_import_template.csv
+!references/dummy_import_template_utf8_bom.csv
+!references/dummy_import_template.xlsx
+
+# GitHub Actions Workflows
+!.github/
+!.github/**
+
+# Standalone Scraper Executables & Build Scripts
+# Scraper_Monthly_Parallel.exe is >100MB (exceeds GitHub 100MB limit), must be ignored
+Scraper_Monthly_Parallel*.exe
+*.exe
+!scraper.exe
+!build_scraper_exe.bat
+
+# Py Scraper - Full Source Code & Pipeline
+!Py Scraper/
+!Py Scraper/*.py
+!Py Scraper/*.bat
+!Py Scraper/*.ps1
+!Py Scraper/*.json
+!Py Scraper/*.md
+!Py Scraper/*.spec
+Py Scraper/.waf_profile/
+Py Scraper/**/.waf_profile/
+Py Scraper/__pycache__/
+Py Scraper/*.py[cod]
+Py Scraper/*$py.class
+Py Scraper/*.exe
+Py Scraper/*.log
+Py Scraper/logs/
+
+# Merge & Convert Utilities in CSV_Output
+!CSV_Output/
+!CSV_Output/merge.py
+!CSV_Output/merge_csv_monthly.py
+!CSV_Output/convert.py
+!CSV_Output/convert_csv_to_parquet.py
+
+# Clean Tools & LandsMaps Enrichment Pipeline
+!tools/
+!tools/clean_sam_project.py
+!tools/build_offline_landsmaps.py
+!tools/github_push.py
+!tools/export_projects_csv.py
+!Py Scraper/enrich_led_landsmaps.py
+!Py Scraper/run_landsmaps_1thread.bat
+!Py Scraper/run_enrich_landsmaps.bat
+!Py Scraper/run_enrich_background.bat
+
+# Clean Caches
+!data/project_name_clean_cache.parquet
+!data/led_coords_cache.parquet
+
+# Prevent duplicate executables & data dumps in subdirectories
+Py Scraper/*.exe
+CSV_Output/*.parquet
+CSV_Output/*.csv
+CSV_Output/*/*.csv
+CSV_Output/*/*.parquet
+
+# ==============================================================================
+# Backups, Old Versions & Internal Dev Notes
+# ==============================================================================
+*backup*
+*BACKUP*
+*OLD*
+*restored*
+backups/
+Backup/
+NOVA-main/
+ttt/
+Co pilot.py
+app - *.py
+diagrams/
+references/WEB_STRUCTURES.md
+references/generate_thailand_locations.py
+
+# ==============================================================================
+# IDE, Editor, Agent & OS Specific Files
+# ==============================================================================
+.vscode/
+.idea/
+.history/
+.project
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
+
+# Runtime-generated browser map payload cache (~60-75 MB, auto-built from parquet)
+static/map_payload_cache.js
+static/map_payload_cache.js.tmp*
+
+# Antigravity & AI Agent directories
+.agents/
+.gemini/
