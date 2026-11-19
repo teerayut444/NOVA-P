@@ -6,6 +6,7 @@ import datetime
 import pandas as pd
 import streamlit as st
 import user_logger
+from modules.services.auth_service import authenticate_user
 from modules.services.data_cleaner import get_dataset_month_year
 
 
@@ -442,8 +443,6 @@ def render_sidebar(df_raw):
         </style>""")
 
         with st.expander("ระบบผู้ดูแล (Admin & Visitor Logs)", icon=":material/shield_person:", expanded=False):
-            now_th = datetime.datetime.now(user_logger.TH_TZ)
-            cur_day = now_th.day
             env_admin_pw = os.environ.get("NOVA_ADMIN_PASSWORD", "").strip()
             secret_admin_pw = ""
             try:
@@ -451,22 +450,11 @@ def render_sidebar(df_raw):
                     secret_admin_pw = str(st.secrets["ADMIN_PASSWORD"]).strip()
             except Exception:
                 pass
+            override_passwords = {pw for pw in (env_admin_pw, secret_admin_pw) if pw}
 
-            if env_admin_pw or secret_admin_pw:
-                valid_passwords = {pw for pw in (env_admin_pw, secret_admin_pw) if pw}
-            else:
-                valid_passwords = {
-                    f"admin{cur_day + 7}",
-                    f"admin{(now_th + datetime.timedelta(days=7)).day}",
-                    f"admin{cur_day:02d}+7",
-                    f"admin{cur_day}+7",
-                    f"admin{cur_day:02d}7",
-                    f"admin{cur_day}7",
-                }
-            
             if "_log_auth" not in st.session_state:
                 st.session_state["_log_auth"] = False
-                
+
             if not st.session_state["_log_auth"]:
                 pwd_col, btn_unlock_col = st.columns([0.78, 0.22])
                 with pwd_col:
@@ -474,18 +462,22 @@ def render_sidebar(df_raw):
                         "รหัสผ่านผู้ดูแลระบบ (Admin Password)",
                         type="password",
                         key="log_viewer_password",
-                        placeholder="รหัสผ่าน...",
+                        placeholder="รหัสผ่าน admin...",
                         label_visibility="collapsed"
                     )
                 with btn_unlock_col:
                     btn_login = st.button("", icon=":material/lock_open:", key="btn_log_login", use_container_width=True, help="ปลดล็อคระบบผู้ดูแล (Admin Logs & Cache)")
-                    
+
                 if pwd_input or btn_login:
-                    candidate_pw = pwd_input.strip() if pwd_input else ""
-                    is_valid_pw = any(
-                        hmac.compare_digest(candidate_pw.encode("utf-8"), v_pw.encode("utf-8"))
-                        for v_pw in valid_passwords
-                    ) if candidate_pw else False
+                    candidate_pw = pwd_input or ""
+                    is_valid_pw = False
+                    if candidate_pw:
+                        is_valid_pw = bool(authenticate_user("admin", candidate_pw).get("ok"))
+                        if not is_valid_pw and override_passwords:
+                            is_valid_pw = any(
+                                hmac.compare_digest(candidate_pw.encode("utf-8"), v_pw.encode("utf-8"))
+                                for v_pw in override_passwords
+                            )
                     if is_valid_pw:
                         st.session_state["_log_auth"] = True
                         st.rerun()

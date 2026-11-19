@@ -411,7 +411,7 @@ def render_welcome_screen():
         <div style="position: fixed; top: 22px; left: 32px; display: flex; align-items: center; gap: 14px; z-index: 999; background: transparent;">
             <img src="data:image/webp;base64,{sam_logo_b64}" style="height: 48px; width: auto; object-fit: contain; border-radius: 6px; filter: drop-shadow(0 2px 8px rgba(6, 78, 59, 0.12));" alt="SAM Logo" />
             <div style="display: flex; flex-direction: column; text-align: left; justify-content: center;">
-                <span style="font-family: 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 1.18rem; font-weight: 800; color: #064e3b; letter-spacing: 0.2px; line-height: 1.25;">บริษัท บริหารสินทรัพย์สุขุมวิท จำกัด</span>
+                <span style="font-family: 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 1.18rem; font-weight: 800; color: #064e3b; letter-spacing: 0.2px; line-height: 1.25;">Streamlit</span>
                 <span style="font-family: 'Outfit', sans-serif; font-size: 0.70rem; font-weight: 700; color: #059669; letter-spacing: 1.2px;">SUKHUMVIT ASSET MANAGEMENT</span>
             </div>
         </div>
