@@ -10,6 +10,11 @@ fileWatcherType = "none"
 maxUploadSize = 500
 maxMessageSize = 500
 enableStaticServing = true
+enableWebsocketCompression = true
+
+[global]
+# Prevent Cached ForwardMsg MISS errors on Streamlit Cloud / fragment reruns
+minCachedMessageSize = 500000000
 
 [browser]
 gatherUsageStats = false

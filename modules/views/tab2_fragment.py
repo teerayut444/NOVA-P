@@ -2531,30 +2531,43 @@ def render_tab2_reference_analytics_fragment(
                 )
             return ""
 
-        diff_target_cols = [c for c in ['เทียบราคากลางต่อ ตร.ว.', 'หักลบราคากลาง ตร.ว. ที่ดินเปล่า', 'เทียบราคากลางต่อ ตร.ม.', 'เทียบราคา ตร.ว. (ทรัพย์อ้างอิง)', 'เทียบราคา ตร.ม. (ทรัพย์อ้างอิง)'] if c in show_df.columns]
+        _TAB2_TABLE_PREVIEW_LIMIT = 5000
+        total_table_rows = len(show_df)
+        preview_df = show_df.head(_TAB2_TABLE_PREVIEW_LIMIT) if total_table_rows > _TAB2_TABLE_PREVIEW_LIMIT else show_df
+
+        if total_table_rows > _TAB2_TABLE_PREVIEW_LIMIT:
+            note_c = "#94a3b8" if is_dark_mode else "#475569"
+            st.markdown(
+                f"<div style='font-size:0.82rem; color:{note_c}; margin:-4px 0 8px 0;'>"
+                f"💡 แสดงตัวอย่างบนตาราง <b>{_TAB2_TABLE_PREVIEW_LIMIT:,}</b> รายการแรกจากทั้งหมด <b>{total_table_rows:,}</b> รายการ "
+                f"เพื่อความเสถียรในการโหลดผ่านเว็บ — ใช้ปุ่ม <b>ส่งออก CSV / Excel</b> ด้านล่างเพื่อดาวน์โหลดข้อมูลครบทั้งหมด"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+
+        diff_target_cols = [c for c in ['เทียบราคากลางต่อ ตร.ว.', 'หักลบราคากลาง ตร.ว. ที่ดินเปล่า', 'เทียบราคากลางต่อ ตร.ม.', 'เทียบราคา ตร.ว. (ทรัพย์อ้างอิง)', 'เทียบราคา ตร.ม. (ทรัพย์อ้างอิง)'] if c in preview_df.columns]
 
         # Pandas Styler has a cell rendering cap (default 262,144 cells).
-        # When viewing large datasets (e.g. nationwide or thousands of rows), render show_df
-        # directly via Arrow to maintain ultra-fast virtualized scrolling and avoid Styler memory exceptions.
-        df_to_render = show_df
-        if diff_target_cols and show_df.size <= 200_000:
+        # Render preview_df with Styler when within cap, otherwise raw Arrow dataframe.
+        df_to_render = preview_df
+        if diff_target_cols and preview_df.size <= 200_000:
             try:
-                df_to_render = show_df.style.map(highlight_diff_cells, subset=diff_target_cols)
+                df_to_render = preview_df.style.map(highlight_diff_cells, subset=diff_target_cols)
             except Exception:
-                df_to_render = show_df
+                df_to_render = preview_df
 
         # Dynamic key forces Glide Data Grid to unmount and completely remount fresh canvas
         # whenever company filters, projects, or row counts change
-        first_asset_id = str(show_df['รหัสทรัพย์'].iloc[0]) if not show_df.empty and 'รหัสทรัพย์' in show_df.columns else ""
-        first_co = str(show_df['บริษัท'].iloc[0]) if not show_df.empty and 'บริษัท' in show_df.columns else ""
+        first_asset_id = str(preview_df['รหัสทรัพย์'].iloc[0]) if not preview_df.empty and 'รหัสทรัพย์' in preview_df.columns else ""
+        first_co = str(preview_df['บริษัท'].iloc[0]) if not preview_df.empty and 'บริษัท' in preview_df.columns else ""
         co_part = ','.join(sorted(active_cos)) if active_cos else 'ALL'
-        grid_sig = f"{co_part}_{active_proj or ''}_{len(show_df)}_{first_asset_id}_{first_co}"
+        grid_sig = f"{co_part}_{active_proj or ''}_{total_table_rows}_{len(preview_df)}_{first_asset_id}_{first_co}"
         grid_key = f"tab2_table_grid_{hashlib.md5(grid_sig.encode('utf-8')).hexdigest()[:12]}"
 
         try:
             st.dataframe(df_to_render, use_container_width=True, height=420, column_config=table_col_config, hide_index=True, key=grid_key)
         except Exception:
-            st.dataframe(show_df, use_container_width=True, height=420, column_config=table_col_config, hide_index=True, key=f"{grid_key}_fb")
+            st.dataframe(preview_df, use_container_width=True, height=420, column_config=table_col_config, hide_index=True, key=f"{grid_key}_fb")
         # ── Import / Export (same style as Tab 1) ──
         render_import_export_section(df_to_export, filename_prefix=f"comparison_{scope_header.replace(' ', '_')}", key_suffix="tab2_compare")
     else:
